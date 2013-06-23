@@ -28,7 +28,7 @@ function send_json_request {
 }
 
 function send_urlencoded_request {
-  curl "http://$arg_host:$arg_port/ajax/control/connection" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=connect&port=$1&baudrate=$2"
+  curl "http://$arg_host:$arg_port/ajax/control/connection" -H "Content-Type: application/x-www-form-urlencoded"  --data $1
   handle_curl_retval $?
 }
 
@@ -56,7 +56,17 @@ connect)
   fi
   arg_dev=$4
   arg_baud=$5
-  send_urlencoded_request $arg_dev $arg_baud
+  send_urlencoded_request "command=connect&port=$arg_dev&baudrate=$arg_baud"
+  
+;;
+
+#############################################################
+##                                                         ##
+##  DISCONNECT                                             ##
+##                                                         ##
+#############################################################
+disconnect)
+  send_urlencoded_request "command=disconnect"
   
 ;;
 
