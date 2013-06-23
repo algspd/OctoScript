@@ -6,7 +6,7 @@ function usage {
   port 0-65535 (default is 5000)
   mode can be connect,gcode
   options are necessary only sometimes:
-  - connect <dev/AUTO> <baudrate/AUTO>
+  - connect <dev/VIRTUAL/AUTO> <baudrate/AUTO>
   - gcode <gcode>
   - upload <file>
   - print <file>
@@ -14,17 +14,22 @@ function usage {
   exit 1 
 }
 
-function send_request {
-  curl --data "$1" -H "Content-Type: application/json" http://$arg_host:$arg_port/ajax/$2 >& /dev/null
+function handle_curl_retval {
+  case $1 in
+    7)
+      echo "Couldn't connect to host, check host and port"
+    ;;
+  esac
+}
 
-  case $? in
+function send_json_request {
+  curl --data "$1" -H "Content-Type: application/json" http://$arg_host:$arg_port/ajax/$2
+  handle_curl_retval $?
+}
 
-7)
-  echo "Couldn't connect to host, check host and port"
-;;
-
-esac
-
+function send_urlencoded_request {
+  curl "http://$arg_host:$arg_port/ajax/control/connection" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=connect&port=$1&baudrate=$2"
+  handle_curl_retval $?
 }
 
 
@@ -36,22 +41,44 @@ arg_host=$1
 arg_port=$2
 arg_mode=$3
 
-
 case $arg_mode in
 
+
+#############################################################
+##                                                         ##
+##  CONNECT                                                ##
+##                                                         ##
+#############################################################
 connect)
-  echo "Not yet implemented"
+  if [ $# -lt 4 ]; then
+    # upload requires one more argument
+    usage
+  fi
+  arg_dev=$4
+  arg_baud=$5
+  send_urlencoded_request $arg_dev $arg_baud
+  
 ;;
 
+#############################################################
+##                                                         ##
+##  GCODE                                                  ##
+##                                                         ##
+#############################################################
 gcode)
   if [ $# -lt 4 ]; then
     # gcode requires one more argument
     usage
   fi
   arg_gcode=$4
-  send_request "{\"command\":\"$arg_gcode\"}" "control/command"
+  send_json_request "{\"command\":\"$arg_gcode\"}" "control/command"
 ;;
 
+#############################################################
+##                                                         ##
+##  UPLOAD                                                 ##
+##                                                         ##
+#############################################################
 upload)
   if [ $# -lt 4 ]; then
     # upload requires one more argument
@@ -62,6 +89,11 @@ upload)
   echo "Not yet implemented"
 ;;
 
+#############################################################
+##                                                         ##
+##  PRINT                                                  ##
+##                                                         ##
+#############################################################
 print)
   if [ $# -lt 4 ]; then
     # print requires one more argument
