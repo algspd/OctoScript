@@ -11,14 +11,17 @@ Features
 
 OctoScript allows you to:
 
-* Send GCodes to a connected 3D printer.
+* Connect to a 3D printer
+* Send GCodes to a connected 3D printer
+* Send a gcode file to the octoprint server
+* Send print order for a file
 
 
 ToDo
 ----
 
 * Support OctoPrint authentication
-* Currently, OctoScript  to the /ajax/foo/bar "api" in 
+* Currently, OctoScript relies on the /ajax/foo/bar "api"
 
 Dependencies
 ------------
