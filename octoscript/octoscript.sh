@@ -95,15 +95,19 @@ upload)
     usage
   fi
   arg_file=$4
+  filename=$(basename "$arg_file")
+  extension="${filename##*.}"
+  filename="${filename%.*}"
   
-  if [[ $arg_file != *.gcode ]] && [[ $arg_file != *.g ]];then
-    echo 'WARNING: You should name files like "something.gcode" or "something.g"'
+  if [[ $extension != gcode ]] && [[ $extension != g ]];then
+    echo "WARNING: You should name files like \"$filename.gcode\" or \"$filename.g\""
   fi
   
   curl "http://$arg_host:$arg_port/ajax/gcodefiles/upload"  -F gcode_file=@"$arg_file" >& /dev/null
   
   if [[ $? == 26 ]];then
     echo "ERROR: Couldn't open file $arg_file"
+    exit 26
   fi
 ;;
 
