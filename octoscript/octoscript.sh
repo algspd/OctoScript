@@ -9,8 +9,12 @@ function usage {
   - connect <dev/VIRTUAL/AUTO> <baudrate/AUTO>
   - gcode <gcode>: send <gcode> to the printer
   - upload <file>: upload <file> to octoprint
+  - delete <file>: <file> will be removed
   - list:          list uploaded files
-  - print <file>:  start <file> printing
+  - print <file>:  load and start <file> printing
+  - load <file>:   load <file> but don't start printing
+  - start:         start printing of already loaded file. If none is loaded, don't do anything. If print is paused, restart.
+
   "
   exit 1 
 }
@@ -24,12 +28,12 @@ function handle_curl_retval {
 }
 
 function send_json_request {
-  curl --data "$1" -H "Content-Type: application/json" http://$arg_host:$arg_port/ajax/$2
+  curl --data "$1" -H "Content-Type: application/json" http://$arg_host:$arg_port/ajax/$2 >& /dev/null
   handle_curl_retval $?
 }
 
 function send_urlencoded_request {
-  curl "http://$arg_host:$arg_port/ajax/control/connection" -H "Content-Type: application/x-www-form-urlencoded"  --data $1
+  curl "http://$arg_host:$arg_port/ajax/control/connection" -H "Content-Type: application/x-www-form-urlencoded"  --data $1 >& /dev/null
   handle_curl_retval $?
 }
 
@@ -114,6 +118,22 @@ upload)
 
 #############################################################
 ##                                                         ##
+##  DELETE                                                 ##
+##                                                         ##
+#############################################################
+delete)
+  if [ $# -lt 4 ]; then
+    # upload requires one more argument
+    usage
+  fi
+  arg_file=$4
+
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/delete" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file" >& /dev/null
+
+;;
+
+#############################################################
+##                                                         ##
 ##  LIST                                                   ##
 ##                                                         ##
 #############################################################
@@ -138,7 +158,7 @@ print)
   arg_file=$4
 
   # Load
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=true"
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=true" >& /dev/null
   
 ;;
 
@@ -154,7 +174,7 @@ load)
   fi
   arg_file=$4
 
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=false"
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=false" >& /dev/null
   
 ;;
 
@@ -165,7 +185,7 @@ load)
 #############################################################
 start)
 
-  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=start"
+  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=start" >& /dev/null
   
 ;;
 
@@ -179,7 +199,7 @@ start)
 
 cancel)
 
-  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=cancel"
+  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=cancel" >& /dev/null
 
 ;;
 
@@ -191,7 +211,7 @@ cancel)
 
 pause)
   echo "INFO: To resume printing, just launch \"pause\" command again"
-  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=pause"
+  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=pause" >& /dev/null
 
 ;;
 
