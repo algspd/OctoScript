@@ -137,7 +137,12 @@ print)
   fi
   arg_file=$4
 
-  echo "Not yet implemented"
+  # Load
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=true"
+  
+  # Start
+  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=start"
+  
 ;;
 
 
