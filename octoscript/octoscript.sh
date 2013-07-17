@@ -4,9 +4,10 @@ function usage {
    echo -en "Usage: $0 host port mode [options]
   host can be string or ip address
   port 0-65535 (default is 5000)
-  mode can be connect,gcode
+  mode can be connect, gcode, upload, delete, list, print, load or start
   options are necessary only sometimes:
   - connect <dev/VIRTUAL/AUTO> <baudrate/AUTO>
+  - disconnect:    ends current printer connection
   - gcode <gcode>: send <gcode> to the printer
   - upload <file>: upload <file> to octoprint
   - delete <file>: <file> will be removed
@@ -36,13 +37,14 @@ case $arg_mode in
 ##                                                         ##
 #############################################################
 connect)
+
   if [ $# -lt 4 ]; then
     # upload requires one more argument
     usage
   fi
   arg_dev=$4
   arg_baud=$5
-  
+
   curl "http://$arg_host:$arg_port/ajax/control/connection" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     --data "command=connect&port=$arg_dev&baudrate=$arg_baud" >& /dev/null
@@ -68,6 +70,7 @@ disconnect)
 ##                                                         ##
 #############################################################
 gcode)
+
   if [ $# -lt 4 ]; then
     # gcode requires one more argument
     usage
@@ -86,6 +89,7 @@ gcode)
 ##                                                         ##
 #############################################################
 upload)
+
   if [ $# -lt 4 ]; then
     # upload requires one more argument
     usage
@@ -106,6 +110,7 @@ upload)
     echo "ERROR: Couldn't open file $arg_file"
     exit 26
   fi
+
 ;;
 
 #############################################################
@@ -131,7 +136,6 @@ delete)
 ##  LIST                                                   ##
 ##                                                         ##
 #############################################################
-
 list)
 
   curl "http://$arg_host:$arg_port/ajax/gcodefiles" 2> /dev/null | grep name|sed 's/.*: "// ; s/",//'
@@ -145,6 +149,7 @@ list)
 ##                                                         ##
 #############################################################
 print)
+
   if [ $# -lt 4 ]; then
     # print requires one more argument
     usage
@@ -155,15 +160,16 @@ print)
   curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
   -H "Content-Type: application/x-www-form-urlencoded"  \
   --data "filename=$arg_file&print=true" >& /dev/null
-  
+
 ;;
 
 #############################################################
 ##                                                         ##
-##  LOAD                                                  ##
+##  LOAD                                                   ##
 ##                                                         ##
 #############################################################
 load)
+
   if [ $# -lt 4 ]; then
     # print requires one more argument
     usage
@@ -173,7 +179,7 @@ load)
   curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
   -H "Content-Type: application/x-www-form-urlencoded"  \
   --data "filename=$arg_file&print=false" >& /dev/null
-  
+
 ;;
 
 #############################################################
@@ -196,7 +202,6 @@ start)
 ##  CANCEL                                                 ##
 ##                                                         ##
 #############################################################
-
 cancel)
 
   curl "http://$arg_host:$arg_port/ajax/control/job" \
@@ -210,8 +215,8 @@ cancel)
 ##  PAUSE                                                  ##
 ##                                                         ##
 #############################################################
-
 pause)
+
   echo "INFO: To resume printing, just launch \"pause\" command again"
   curl "http://$arg_host:$arg_port/ajax/control/job" \
   -H "Content-Type: application/x-www-form-urlencoded" \
