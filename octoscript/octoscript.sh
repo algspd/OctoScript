@@ -7,9 +7,10 @@ function usage {
   mode can be connect,gcode
   options are necessary only sometimes:
   - connect <dev/VIRTUAL/AUTO> <baudrate/AUTO>
-  - gcode <gcode>
-  - upload <file>
-  - print <file>
+  - gcode <gcode>: send <gcode> to the printer
+  - upload <file>: upload <file> to octoprint
+  - list:          list uploaded files
+  - print <file>:  start <file> printing
   "
   exit 1 
 }
@@ -110,6 +111,19 @@ upload)
     exit 26
   fi
 ;;
+
+#############################################################
+##                                                         ##
+##  LIST                                                   ##
+##                                                         ##
+#############################################################
+
+list)
+
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles" 2> /dev/null | grep name|sed 's/.*: "// ; s/",//'
+
+;;
+
 
 #############################################################
 ##                                                         ##
