@@ -19,25 +19,6 @@ function usage {
   exit 1 
 }
 
-function handle_curl_retval {
-  case $1 in
-    7)
-      echo "Couldn't connect to host, check host and port"
-    ;;
-  esac
-}
-
-function send_json_request {
-  curl --data "$1" -H "Content-Type: application/json" http://$arg_host:$arg_port/ajax/$2 >& /dev/null
-  handle_curl_retval $?
-}
-
-function send_urlencoded_request {
-  curl "http://$arg_host:$arg_port/ajax/control/connection" -H "Content-Type: application/x-www-form-urlencoded"  --data $1 >& /dev/null
-  handle_curl_retval $?
-}
-
-
 if [ $# -lt 3 ];then
   usage
 fi
@@ -61,7 +42,10 @@ connect)
   fi
   arg_dev=$4
   arg_baud=$5
-  send_urlencoded_request "command=connect&port=$arg_dev&baudrate=$arg_baud"
+  
+  curl "http://$arg_host:$arg_port/ajax/control/connection" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    --data "command=connect&port=$arg_dev&baudrate=$arg_baud" >& /dev/null
   
 ;;
 
@@ -71,7 +55,10 @@ connect)
 ##                                                         ##
 #############################################################
 disconnect)
-  send_urlencoded_request "command=disconnect"
+
+  curl "http://$arg_host:$arg_port/ajax/control/connection" \
+  -H "Content-Type: application/x-www-form-urlencoded"  \
+  --data "command=disconnect" >& /dev/null
   
 ;;
 
@@ -86,7 +73,11 @@ gcode)
     usage
   fi
   arg_gcode=$4
-  send_json_request "{\"command\":\"$arg_gcode\"}" "control/command"
+  
+  curl "http://$arg_host:$arg_port/ajax/control/command" \
+  --data "{\"command\":\"$arg_gcode\"}" \
+  -H "Content-Type: application/json" >& /dev/null
+
 ;;
 
 #############################################################
@@ -108,7 +99,8 @@ upload)
     echo "WARNING: You should name files like \"$filename.gcode\" or \"$filename.g\""
   fi
   
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/upload"  -F gcode_file=@"$arg_file" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/upload" \
+  -F gcode_file=@"$arg_file" >& /dev/null
   
   if [[ $? == 26 ]];then
     echo "ERROR: Couldn't open file $arg_file"
@@ -128,7 +120,9 @@ delete)
   fi
   arg_file=$4
 
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/delete" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/delete" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data "filename=$arg_file" >& /dev/null
 
 ;;
 
@@ -158,7 +152,9 @@ print)
   arg_file=$4
 
   # Load
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=true" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
+  -H "Content-Type: application/x-www-form-urlencoded"  \
+  --data "filename=$arg_file&print=true" >& /dev/null
   
 ;;
 
@@ -174,7 +170,9 @@ load)
   fi
   arg_file=$4
 
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" -H "Content-Type: application/x-www-form-urlencoded"  --data "filename=$arg_file&print=false" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
+  -H "Content-Type: application/x-www-form-urlencoded"  \
+  --data "filename=$arg_file&print=false" >& /dev/null
   
 ;;
 
@@ -185,7 +183,9 @@ load)
 #############################################################
 start)
 
-  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=start" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/control/job" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data "command=start" >& /dev/null
   
 ;;
 
@@ -199,7 +199,9 @@ start)
 
 cancel)
 
-  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=cancel" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/control/job" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data "command=cancel" >& /dev/null
 
 ;;
 
@@ -211,10 +213,11 @@ cancel)
 
 pause)
   echo "INFO: To resume printing, just launch \"pause\" command again"
-  curl "http://$arg_host:$arg_port/ajax/control/job" -H "Content-Type: application/x-www-form-urlencoded"  --data "command=pause" >& /dev/null
+  curl "http://$arg_host:$arg_port/ajax/control/job" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data "command=pause" >& /dev/null
 
 ;;
-
 
 *)
 usage
