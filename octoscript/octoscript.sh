@@ -206,7 +206,7 @@ start)
 
   curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/job" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  --data "command=start"
+  --data "command=start" >& /dev/null
   
 ;;
 
