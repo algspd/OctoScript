@@ -6,6 +6,7 @@ function usage {
   port 0-65535 (default is 5000)
   mode can be connect, gcode, upload, delete, list, print, load or start
   options are necessary only sometimes:
+  - login <username> <password>
   - connect <dev/VIRTUAL/AUTO> <baudrate/AUTO>
   - disconnect:    ends current printer connection
   - gcode <gcode>: send <gcode> to the printer
@@ -30,6 +31,19 @@ arg_mode=$3
 
 case $arg_mode in
 
+#############################################################
+##                                                         ##
+##  LOGIN                                                  ##
+##                                                         ##
+#############################################################
+login)
+
+
+  curl -c cookies.txt -i "http://$arg_host:$arg_port/ajax/login" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    --data "user=$5&pass=$6" >& /dev/null
+
+;;
 
 #############################################################
 ##                                                         ##
@@ -38,14 +52,15 @@ case $arg_mode in
 #############################################################
 connect)
 
-  if [ $# -lt 4 ]; then
-    # upload requires one more argument
+  if [ $# -lt 5 ]; then
+    # connect requires two more arguments
     usage
   fi
+
   arg_dev=$4
   arg_baud=$5
-
-  curl "http://$arg_host:$arg_port/ajax/control/connection" \
+  
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/connection" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     --data "command=connect&port=$arg_dev&baudrate=$arg_baud" >& /dev/null
   
@@ -58,7 +73,7 @@ connect)
 #############################################################
 disconnect)
 
-  curl "http://$arg_host:$arg_port/ajax/control/connection" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/connection" \
   -H "Content-Type: application/x-www-form-urlencoded"  \
   --data "command=disconnect" >& /dev/null
   
@@ -77,7 +92,7 @@ gcode)
   fi
   arg_gcode=$4
   
-  curl "http://$arg_host:$arg_port/ajax/control/command" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/command" \
   --data "{\"command\":\"$arg_gcode\"}" \
   -H "Content-Type: application/json" >& /dev/null
 
@@ -103,7 +118,7 @@ upload)
     echo "WARNING: You should name files like \"$filename.gcode\" or \"$filename.g\""
   fi
   
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/upload" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles/upload" \
   -F gcode_file=@"$arg_file" >& /dev/null
   
   if [[ $? == 26 ]];then
@@ -125,7 +140,7 @@ delete)
   fi
   arg_file=$4
 
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/delete" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles/delete" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data "filename=$arg_file" >& /dev/null
 
@@ -138,7 +153,7 @@ delete)
 #############################################################
 list)
 
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles" 2> /dev/null | grep name|sed 's/.*: "// ; s/",//'
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles" 2> /dev/null | grep name|sed 's/.*: "// ; s/",//'
 
 ;;
 
@@ -157,7 +172,7 @@ print)
   arg_file=$4
 
   # Load
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
   -H "Content-Type: application/x-www-form-urlencoded"  \
   --data "filename=$arg_file&print=true" >& /dev/null
 
@@ -176,7 +191,7 @@ load)
   fi
   arg_file=$4
 
-  curl "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles/load" \
   -H "Content-Type: application/x-www-form-urlencoded"  \
   --data "filename=$arg_file&print=false" >& /dev/null
 
@@ -189,9 +204,9 @@ load)
 #############################################################
 start)
 
-  curl "http://$arg_host:$arg_port/ajax/control/job" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/job" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  --data "command=start" >& /dev/null
+  --data "command=start"
   
 ;;
 
@@ -204,7 +219,7 @@ start)
 #############################################################
 cancel)
 
-  curl "http://$arg_host:$arg_port/ajax/control/job" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/job" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data "command=cancel" >& /dev/null
 
@@ -218,7 +233,7 @@ cancel)
 pause)
 
   echo "INFO: To resume printing, just launch \"pause\" command again"
-  curl "http://$arg_host:$arg_port/ajax/control/job" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/control/job" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data "command=pause" >& /dev/null
 
