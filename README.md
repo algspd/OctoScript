@@ -16,16 +16,10 @@ OctoScript allows you to:
 * Send a gcode file to the octoprint server, or delete it
 * Send print order for a file, load, start print...
 * List uploaded files
-
-
-ToDo
-----
-
-* Support OctoPrint authentication
+* Support OctoPrint authentication (thanks [timothyclemans](https://github.com/timothyclemans))
 
 Dependencies
 ------------
 
 * [GNU Bash](http://www.gnu.org/software/bash/)
 * [Curl](http://curl.haxx.se)
-
