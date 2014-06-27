@@ -118,7 +118,7 @@ upload)
     echo "WARNING: You should name files like \"$filename.gcode\" or \"$filename.g\""
   fi
   
-  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles/upload" \
+  curl -b cookies.txt "http://$arg_host:$arg_port/ajax/gcodefiles/local" \
   -F gcode_file=@"$arg_file" >& /dev/null
   
   if [[ $? == 26 ]];then
